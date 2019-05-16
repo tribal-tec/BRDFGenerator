@@ -74,13 +74,13 @@ namespace detail
 		Header.Flags = Caps;
 		Header.Width = static_cast<std::uint32_t>(Texture.extent().x);
 		Header.Height = static_cast<std::uint32_t>(Texture.extent().y);
-		Header.Pitch = static_cast<std::uint32_t>((Desc.Flags & detail::CAP_COMPRESSED_BIT) ? Texture.size() / Texture.faces() : 32);
 		Header.Depth = static_cast<std::uint32_t>(Texture.extent().z > 1 ? Texture.extent().z : 0);
 		Header.MipMapLevels = static_cast<std::uint32_t>(Texture.levels());
 		Header.Format.size = sizeof(detail::dds_pixel_format);
 		Header.Format.flags = RequireDX10Header ? dx::DDPF_FOURCC : DXFormat.DDPixelFormat;
 		Header.Format.fourCC = detail::get_fourcc(RequireDX10Header, Texture.format(), DXFormat);
 		Header.Format.bpp = static_cast<std::uint32_t>(detail::bits_per_pixel(Texture.format()));
+		Header.Pitch = static_cast<std::uint32_t>((Desc.Flags & detail::CAP_COMPRESSED_BIT) ? Texture.size() / Texture.faces() : Texture.extent().x*Header.Format.bpp);
 		Header.Format.Mask = DXFormat.Mask;
 		//Header.surfaceFlags = detail::DDSCAPS_TEXTURE | (Storage.levels() > 1 ? detail::DDSCAPS_MIPMAP : 0);
 		Header.SurfaceFlags = detail::DDSCAPS_TEXTURE | detail::DDSCAPS_MIPMAP;
