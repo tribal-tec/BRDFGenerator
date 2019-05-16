@@ -3,10 +3,10 @@
  * Written by: Hector Medina-Fetterman
  */
 
-#include <glm\glm.hpp>
-#include <glm\gtc\packing.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/packing.hpp>
 
-#include <gli\gli.hpp>
+#include <gli/gli.hpp>
 
 #include <iostream>
 #include <stdio.h>
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 {
 	//Here we set up the default parameters
 	int samples = 1024;
-	int size = 128;
+	int size = 512;
 	int bits = 16;
 	std::string filename;
 
@@ -163,8 +163,8 @@ int main(int argc, char** argv)
 				}
 				else if (!strcmp(argv[i], "-b")) {
 					bits = strtol(argv[i + 1], &p, 10);
-					if (errno != 0 || *p != '\0' || bits > INT_MAX || (bits != 16 && bits != 32)) {
-						std::cout << "Invalid bit input, should be an integer value of 16 or 32.\n";
+					if (errno != 0 || *p != '\0' || bits > INT_MAX || (bits != 16 && bits != 32 && bits != 8)) {
+						std::cout << "Invalid bit input, should be an integer value of 8, 16 or 32.\n";
 						exit(0);
 					}
 				}
@@ -191,6 +191,8 @@ int main(int argc, char** argv)
 		tex = gli::texture2d(gli::FORMAT_RG16_SFLOAT_PACK16, gli::extent2d(size, size), 1);
 	if(bits == 32)
 		tex = gli::texture2d(gli::FORMAT_RG32_SFLOAT_PACK32, gli::extent2d(size, size), 1);
+	if(bits == 8)
+		tex = gli::texture2d(gli::FORMAT_BGR8_UNORM_PACK8, gli::extent2d(size, size), 1);
 
 	for (int y = 0; y < size; y++)
 	{
@@ -198,11 +200,14 @@ int main(int argc, char** argv)
 		{
 			float NoV = (y + 0.5f) * (1.0f / size);
 			float roughness = (x + 0.5f) * (1.0f / size);
+			const auto value = IntegrateBRDF(NoV, roughness,samples);
 
 			if (bits == 16)
-				tex.store<glm::uint32>({ y, size - 1 - x }, 0, gli::packHalf2x16(IntegrateBRDF(NoV, roughness, samples)));
+				tex.store<glm::uint32>({ y, size - 1 - x }, 0, gli::packHalf2x16(value));
 			if (bits == 32)
-				tex.store<glm::vec2>({ y, size - 1 - x }, 0, IntegrateBRDF(NoV, roughness,samples));
+				tex.store<glm::vec2>({ y, size - 1 - x }, 0, value);
+			if (bits == 8)
+				tex.store<glm::u8vec3>({ y, size - 1 - x }, 0, {0, value.y*255, value.x*255});
 		}
 	}
 
